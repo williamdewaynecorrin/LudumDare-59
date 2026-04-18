@@ -1,0 +1,237 @@
+using UnityEngine;
+
+[DefaultExecutionOrder(ExecutionOrders.PLAYER_CONTROLLER)]
+public class PlayerController : MonoBehaviour
+{
+    // -- inspectable members
+    [Header("Base Data")]
+    public new PlayerCamera camera;
+    public float acceleration = 0.1f;
+    public float maxspeed = 0.5f;
+    [Range(0f, 1f)]
+    public float stopfriction = 0.9f;
+
+    [Header("Gravity/Jumping")]
+    public float gravitystrength = 0.1f;
+    public float jumpstrength = 1.0f;
+    public float mingroundedcastdist = 0.1f;
+    public CTimer coyotetimer;
+    public LayerMask groundmask;
+
+    [Header("Character Graphics - Third Person")]
+    public Transform graphicsroot;
+    [Range(0f, 1f)]
+    public float rotationlerp = 0.2f;
+    public Animator animatorbody;
+    public string bodyidle = "Idle";
+    public string bodywalk = "Walk";
+
+    [Header("Character Graphics - First Person")]
+    public Animator animatorhands;
+    public string handsidle = "Idle";
+
+    [Header("SFX")]
+    public AudioClipXT sfxjump;
+    public AudioClipXT sfxland;
+
+    // -- private members
+    private CharacterController character = null;
+    private Vector2 movementinput = Vector2.zero;
+    private Vector3 currentmovement = Vector3.zero;
+    private Vector3 currentgravity = Vector3.zero;
+    private bool grounded = false;
+    private GameObject lastgroundobject = null;
+    private bool coyotetimeavailable = false;
+    private bool jumped = false;
+
+    public bool CanJump => !jumped && (grounded || coyotetimeavailable);
+
+    void Awake()
+    {
+        character = GetComponent<CharacterController>();
+        coyotetimer.Init();
+
+        animatorbody.PlayAnimationState(bodyidle);
+        animatorhands.PlayAnimationState(handsidle);
+    }
+
+    void Update()
+    {
+        // -- movement
+        float xin = Input.GetKey(KeyCode.A) ? -1.0f : 0.0f;
+        xin += Input.GetKey(KeyCode.D) ? 1.0f : 0.0f;
+        float yin = Input.GetKey(KeyCode.W) ? 1.0f : 0.0f;
+        yin += Input.GetKey(KeyCode.S) ? -1.0f : 0.0f;
+
+        movementinput = new Vector2(xin, yin);
+
+        if (movementinput != Vector2.zero)
+        {
+            if (!animatorbody.AnimatorIsInState(bodywalk))
+                animatorbody.PlayAnimationState(bodywalk);
+        }
+        else
+        {
+            if (!animatorbody.AnimatorIsInState(bodyidle))
+                animatorbody.PlayAnimationState(bodyidle);
+        }
+
+        // -- jumping
+        if (Input.GetKeyDown(KeyCode.Space) && CanJump)
+        {
+            Jump();
+        }
+
+        // -- coyote time
+        if (grounded)
+        {
+            coyotetimer.Reset();
+            coyotetimeavailable = true;
+        }
+        else
+        {
+            if(coyotetimer.TimerReached())
+            {
+                coyotetimeavailable = false;
+            }
+            else
+            {
+                coyotetimer.Tick(Time.deltaTime);
+            }
+        }
+    }
+
+    void FixedUpdate()
+    {
+        // -- gravity + grounding
+        bool wasgrounded = grounded;
+        grounded = false;
+        GetGroundedData(out Vector3 p1, out Vector3 p2, out Vector3 gravitydir, out float castdistance);
+
+        if (currentgravity.y <= 0f && Physics.CapsuleCast(p1, p2, character.radius, gravitydir, out RaycastHit groundhit, castdistance, groundmask, QueryTriggerInteraction.Ignore))
+        {
+            if (!wasgrounded)
+                OnGroundLand(groundhit);
+
+            grounded = true;
+            lastgroundobject = groundhit.collider.gameObject;
+            currentgravity = Vector3.zero;
+        }
+        else
+        {
+            if (wasgrounded)
+                OnGroundLeave();
+
+            currentgravity += gravitydir * gravitystrength;
+        }
+
+
+        // -- movement
+        Vector3 forward = camera.ForwardMovement();
+        Vector3 strafe = camera.StrafeMovement();
+
+        if (movementinput != Vector2.zero)
+        {
+            Vector3 framemovement = forward * acceleration * movementinput.y + strafe * acceleration * movementinput.x;
+            currentmovement += framemovement;
+            currentmovement = Vector3.ClampMagnitude(currentmovement, maxspeed);
+        }
+        else
+        {
+            currentmovement *= stopfriction;
+        }
+
+        CollisionFlags gravityflags = character.Move(currentgravity);
+        CollisionFlags moveflags = character.Move(currentmovement);
+
+        // -- rotate model towards last look dir
+        graphicsroot.localRotation = Quaternion.Slerp(graphicsroot.localRotation, Quaternion.LookRotation(forward, Vector3.up), rotationlerp);
+
+        //282829
+        //882D22
+        //FFFEE4
+    }
+
+    private void OnGroundLand(RaycastHit hit)
+    {
+        Teleport(hit.point + Vector3.up * Physics.defaultContactOffset);
+        jumped = false;
+        GameManager.Play3D(sfxland, transform.position);
+    }
+
+    private void OnGroundLeave()
+    {
+
+    }
+
+    public void Teleport(Vector3 location)
+    {
+        character.enabled = false;
+        transform.position = location;
+        character.enabled = true;
+    }
+
+    public void Jump()
+    {
+        currentgravity = -GetGravityDir() * jumpstrength;
+        jumped = true;
+        GameManager.Play3D(sfxjump, transform.position);
+    }
+
+    public Vector3 GetTargetPosition()
+    {
+        return transform.position;
+    }
+
+    public Quaternion GetYAW()
+    {
+        return transform.rotation;
+    }
+
+    private void GetGroundedData(out Vector3 p1, out Vector3 p2, out Vector3 gravitydir, out float castdistance)
+    {
+        Vector3 radiusoffset = Vector3.up * character.radius;
+        p1 = transform.position + character.center + Vector3.up * character.height * -0.5f + radiusoffset;
+        p2 = transform.position + character.center + Vector3.up * character.height * 0.5f - radiusoffset;
+
+        gravitydir = GetGravityDir();
+        castdistance = Mathf.Max(mingroundedcastdist, currentgravity.magnitude);
+    }
+
+    private Vector3 GetGravityDir()
+    {
+        Vector3 gravitydir = Vector3.down;
+        return gravitydir;
+    }
+
+    // -- debug functions
+    void OnGUI()
+    {
+        const float debuglineheight = 25f;
+        Rect debugrect = new Rect(5, 5, 250, debuglineheight);
+
+        GUI.Label(debugrect, string.Format("Current Speed -> {0}", currentmovement.magnitude.ToString("F2")));
+        debugrect.y += debuglineheight;
+        GUI.Label(debugrect, string.Format("Grounded? -> {0}", grounded.ToString()));
+        debugrect.y += debuglineheight;
+        GUI.Label(debugrect, string.Format("Last Ground Object -> {0}", lastgroundobject != null ? lastgroundobject.name : "N/A"));
+        debugrect.y += debuglineheight;
+        GUI.Label(debugrect, string.Format("Can Jump? -> {0}", CanJump));
+        debugrect.y += debuglineheight;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (!Application.isPlaying)
+            return;
+
+        GetGroundedData(out Vector3 p1, out Vector3 p2, out Vector3 gravitydir, out float castdistance);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(p1, character.radius);
+        Gizmos.DrawWireSphere(p2, character.radius);
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(transform.position, transform.position + gravitydir * castdistance);
+    }
+}
