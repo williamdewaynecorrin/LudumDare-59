@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [DefaultExecutionOrder(ExecutionOrders.PLAYER_CAMERA)]
 public class PlayerCamera : MonoBehaviour
@@ -16,6 +17,7 @@ public class PlayerCamera : MonoBehaviour
     {
         CalculateTarget();
         UpdateTarget();
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()
@@ -25,6 +27,7 @@ public class PlayerCamera : MonoBehaviour
         // -- update look
         Vector2 mouseinput = new Vector2(Input.GetAxisRaw("Mouse Y"), Input.GetAxisRaw("Mouse X"));
         currentpitch -= mouseinput.x * sensitivity;
+        currentpitch = Mathf.Clamp(currentpitch, -89f, 89f);
         currentyaw += mouseinput.y * sensitivity;
     }
 
@@ -51,12 +54,12 @@ public class PlayerCamera : MonoBehaviour
 
     public Vector3 ForwardMovement()
     {
-        return transform.forward.NoY();
+        return transform.forward.NoY().normalized;
     }
 
     public Vector3 StrafeMovement()
     {
-        return transform.right.NoY();
+        return transform.right.NoY().normalized;
     }
 
 }

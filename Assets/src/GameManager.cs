@@ -65,6 +65,8 @@ public class GameManager : MonoBehaviour
     public static AudioSource Play2D(AudioClipXT clip)
     {
         AudioSource source = instance.CreateInternal(clip);
+        source.Play();
+
         return source;
     }
 
@@ -74,6 +76,7 @@ public class GameManager : MonoBehaviour
         source.transform.position = pos;
         source.minDistance = kDefault3DMaxVolumeDistance;
         source.maxDistance = kDefault3DMinVolumeDistance;
+        source.Play();
 
         return source;
     }

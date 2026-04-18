@@ -4,9 +4,10 @@ Shader "Custom/ClipCharacter"
     {
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
+        _ClipMaskTex ("Clip Mask (B)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
-        _ClipValue ("ClipValue", Range(-2, 2)) = 1
+        _ClipValue ("ClipValue", Range(0, 1)) = 0.75
     }
     SubShader
     {
@@ -24,6 +25,7 @@ Shader "Custom/ClipCharacter"
         };
 
         sampler2D _MainTex;
+        sampler2D _ClipMaskTex;
         half _Glossiness;
         half _ClipValue;
         half _Metallic;
@@ -35,8 +37,9 @@ Shader "Custom/ClipCharacter"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             // -- discard any pixels above a certain height
-            float3 localpos = IN.worldPos - mul(unity_ObjectToWorld, float4(0, 0, 0, 1)).xyz;
-            if(localpos.y > _ClipValue)
+            // float3 localpos = IN.worldPos - mul(unity_ObjectToWorld, float4(0, 0, 0, 1)).xyz;
+            fixed clipmask = tex2D(_ClipMaskTex, IN.uv_MainTex).b;
+            if(clipmask < _ClipValue)
                 discard;
 
             fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
