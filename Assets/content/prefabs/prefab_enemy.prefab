@@ -192,13 +192,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   yawonly: 0
-  hasscaling: 0
+  hasscaling: 1
   scalingdistances:
-    min: 0
-    max: 0
+    min: 20
+    max: 60
   scales:
-    min: 0
-    max: 0
+    min: 3.5
+    max: 1.5
 --- !u!1 &1720681163865864367
 GameObject:
   m_ObjectHideFlags: 0
@@ -331,11 +331,11 @@ MonoBehaviour:
   damageamount: 25
   mingroundedcastdist: 0.4
   graphicsroot: {fileID: 5613557874343116193}
-  speed: 0.15
+  speed: 0.2
   gravity: 0.1
   groundmask:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 65600
   playermask:
     serializedVersion: 2
     m_Bits: 512
@@ -346,6 +346,24 @@ MonoBehaviour:
   spawnanim: Spawn
   selfsource: {fileID: 6157694775780908690}
   rotationlerp: 0.2
+  shoots: 0
+  muzzleflash: {fileID: 0}
+  muzzle: {fileID: 0}
+  shootingstatetimer:
+    time: 0
+    maxtime: 0
+  firetimereset:
+    min: 0
+    max: 0
+  fireanim: Fire
+  bulletspeed: 1
+  bulletgravity: 1
+  sfxfire:
+    clip: {fileID: 0}
+    volumemult: 1
+    pitchvariance:
+      min: 0
+      max: 0
   sfxspawn:
     clip: {fileID: 8300000, guid: df78e1160c8a6bc40ac81c6b96828cc6, type: 3}
     volumemult: 1
@@ -376,9 +394,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf4c90c499ea70e4ea1c2a7092c1bbd1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  teamid: 1
   health: 100
   uifill: {fileID: 3573822560905078246}
   uifillroot: {fileID: 1720681163865864367}
+  ondamaged:
+    m_PersistentCalls:
+      m_Calls: []
   ondeath:
     m_PersistentCalls:
       m_Calls:
@@ -394,6 +416,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  hasrecoverytime: 0
+  recoverytime: 2
 --- !u!143 &4548466948335726868
 CharacterController:
   m_ObjectHideFlags: 0

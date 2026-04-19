@@ -4,7 +4,9 @@ using UnityEngine;
 public class CTimer
 {
     public float time;
-    private float maxtime;
+
+    [HideInInspector]
+    public float maxtime;
 
     public void Init()
     {

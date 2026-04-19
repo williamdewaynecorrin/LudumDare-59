@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     [Range(0f, 1f)]
     public float stopfriction = 0.9f;
     public Health health;
+    public AudioClipXT sfxhurt;
     public UIItems uiitems;
 
     [Header("Gravity/Jumping")]
@@ -21,6 +22,8 @@ public class PlayerController : MonoBehaviour
     public float mingroundedcastdist = 0.1f;
     public CTimer coyotetimer;
     public LayerMask groundmask;
+    public float knockbackstrength = 1.0f;
+    public float knockbackfriction = 0.9f;
 
     [Header("Character Graphics - Third Person")]
     public Transform graphicsroot;
@@ -52,6 +55,7 @@ public class PlayerController : MonoBehaviour
     private bool jumped = false;
     private float distancetravelled;
     private bool issprinting = false;
+    private Vector3 currentknockback = Vector3.zero;
 
     public bool CanJump => !jumped && (grounded || coyotetimeavailable);
     public bool CanSprint => grounded;
@@ -179,6 +183,12 @@ public class PlayerController : MonoBehaviour
         CollisionFlags moveflags = character.Move(currentmovement);
         CollisionFlags gravityflags = character.Move(currentgravity);
 
+        if(currentknockback != Vector3.zero)
+        {
+            currentknockback *= knockbackfriction;
+            moveflags = character.Move(currentknockback);
+        }
+
         // -- footstep detection
         if (grounded)
         {
@@ -224,9 +234,23 @@ public class PlayerController : MonoBehaviour
         GameManager.Play3D(sfxjump, transform.position);
     }
 
+    public void OnDamaged(Vector3 hitpoint, Vector3 normal)
+    {
+        Vector3 awaydamage = (transform.position - hitpoint).NoY().normalized;
+        currentknockback = (Vector3.up * 1.5f + awaydamage * 1f).normalized;
+        currentknockback *= knockbackstrength;
+
+        GameManager.Play2D(sfxhurt);
+    }
+
     public Vector3 GetTargetPosition()
     {
         return transform.position;
+    }
+
+    public Vector3 GetChestTarget()
+    {
+        return transform.position + character.center + Vector3.up * character.height * 0.3f;
     }
 
     public Quaternion GetYAW()

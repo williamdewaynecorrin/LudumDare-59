@@ -57,7 +57,7 @@ MonoBehaviour:
   body: {fileID: 0}
   raycastmask:
     serializedVersion: 2
-    m_Bits: 448
+    m_Bits: 65984
 --- !u!1 &7982050548145705876
 GameObject:
   m_ObjectHideFlags: 0

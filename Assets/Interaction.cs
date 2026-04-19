@@ -6,6 +6,7 @@ public class Interaction : MonoBehaviour
     public string alreadyusedtext;
     public AudioClipXT sfxpreview;
     public AudioClipXT sfxinteract;
+    public AudioClipXT sfxfail;
     public EInteractionFunctionType function = EInteractionFunctionType.eNone;
     public EItemType iteminteraction = EItemType.eCrystals;
     public bool oneshot = true;
@@ -18,16 +19,19 @@ public class Interaction : MonoBehaviour
         bool success = false;
         player.interacttext.text = "";
 
-        if(!hasused)
-        {
-            if (sfxinteract.IsValid())
-                GameManager.Play2D(sfxinteract);
-        }
-
         if (function == EInteractionFunctionType.eDepositItem)
         {
-            // -- set success to true if we have enough to deposit or w/e
-            //GameManager.Player.ItemDeposited(iteminteraction);
+            if(GameManager.Player.uiitems.FullyComplete())
+            {
+                GameManager.WinGame();
+                success = true;
+            }
+            else
+            {
+                UIDynamicText texth = GameManager.TextPooler.Handle() as UIDynamicText;
+                texth.CreateText("MISSING ITEMS", Color.red, new Vector3(Random.Range(-80f, -30f), Random.Range(70f, 10f), 0f), Random.Range(-10f, 10f), Vector3.one);
+                texth.DisableRotation();
+            }
         }
         else if(function == EInteractionFunctionType.eGetItem)
         {
@@ -37,7 +41,18 @@ public class Interaction : MonoBehaviour
 
         if(success)
         {
+            if (!hasused)
+            {
+                if (sfxinteract.IsValid())
+                    GameManager.Play2D(sfxinteract);
+            }
+
             hasused = true;
+        }
+        else
+        {
+            if (sfxfail.IsValid())
+                GameManager.Play2D(sfxfail);
         }
     }
 

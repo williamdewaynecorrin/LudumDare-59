@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
 
     public static PlayerController Player => player;
     public static ObjectPooler TextPooler => instance.textpooler;
+    public static ObjectPooler EnemyBulletPooler => instance.enemybulletpooler;
 
     // -- inspectable
     public float musictransitionspeed = 2.0f;
@@ -28,7 +29,10 @@ public class GameManager : MonoBehaviour
     public AudioSource musicsource;
     public AudioSource battlemusicsource;
     public AudioSource sfxsource;
-    public ObjectPooler textpooler;
+    public ObjectPooler textpooler; 
+    public ObjectPooler enemybulletpooler;
+
+    private static bool wongame = false;
 
     void Awake()
     {
@@ -109,6 +113,19 @@ public class GameManager : MonoBehaviour
     public static void ResumeNormalTrack()
     {
         battlemusicactive = false;
+    }
+
+    public static void WinGame()
+    {
+        wongame = true;
+    }
+
+    public static void LoseGame()
+    {
+        if(!wongame)
+        {
+
+        }
     }
 
     public static AudioSource Play2D(AudioClipXT clip)

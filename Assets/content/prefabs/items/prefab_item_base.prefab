@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 751332086456104716}
   serializedVersion: 2
   m_LocalRotation: {x: 0.08715578, y: 0, z: 0, w: 0.9961947}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.28, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -65,6 +65,7 @@ MonoBehaviour:
   localspace: 1
   amp: 0.25
   period: 6
+  flipaxis: 0
 --- !u!1 &3475353740074299595
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,7 +113,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   graphics: {fileID: 7920368350720491737}
-  uiactivator: {fileID: 0}
+  type: 0
   sfxpickup:
     clip: {fileID: 8300000, guid: 12054da8512b2d545abc74de284bd76a, type: 3}
     volumemult: 1

@@ -17,6 +17,8 @@ public class UIDynamicText : PooledObject
     private float startrot;
     private Vector3 startscale;
 
+    private bool rotationdisabled = false;
+
     public void CreateText(string text, Color c, Vector3 pos, float rot, Vector3 scale)
     {
         textobject.text = text;
@@ -26,7 +28,14 @@ public class UIDynamicText : PooledObject
         startrot = rot;
         startscale = scale;
 
+        rotationdisabled = false;
+
         SetTransformData();
+    }
+
+    public void DisableRotation()
+    {
+        rotationdisabled = true;
     }
 
     public override void OnHandle()
@@ -59,6 +68,9 @@ public class UIDynamicText : PooledObject
         float rot = rotationovertime.Evaluate(ratio);
         float scale = scaleovertime.Evaluate(ratio);
         float alpha = alphaovertime.Evaluate(ratio);
+
+        if (rotationdisabled)
+            rot = 0f;
 
         transform.localPosition = startpos + new Vector3(xpos, ypos, 0f);
         transform.localRotation = Quaternion.AngleAxis(startrot + rot, Vector3.forward);

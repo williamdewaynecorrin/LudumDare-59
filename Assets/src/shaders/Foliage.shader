@@ -7,6 +7,9 @@ Shader "Custom/Foliage"
         _ClipMaskTex ("Clip Mask (B)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _Metallic ("Metallic", Range(0,1)) = 0.0
+        _XStrength ("X Strength", Range(0, 1)) = 0.25
+        _XStrength ("Z Strength", Range(0, 1)) = 0.2
+        _Period ("Period", Range(0, 10)) = 1
     }
     SubShader
     {
@@ -29,6 +32,9 @@ Shader "Custom/Foliage"
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
+        half _XStrength;
+        half _ZStrength;
+        half _Period;
 
         UNITY_INSTANCING_BUFFER_START(Props)
         UNITY_INSTANCING_BUFFER_END(Props)
@@ -39,8 +45,8 @@ Shader "Custom/Foliage"
 
             float periodoffset = world.x + world.z;
             float4 localpos = v.vertex;
-            localpos.x +=  sin(periodoffset + _Time.y) * localpos.y * 0.25;
-            localpos.z +=  cos(periodoffset + _Time.y * 2.0) * localpos.y * 0.2;
+            localpos.x +=  sin(periodoffset + _Time.y * _Period) * localpos.y * _XStrength;
+            localpos.z +=  cos(periodoffset + _Time.y * _Period * 2.0) * localpos.y * _ZStrength;
 
             v.vertex = localpos;
         }

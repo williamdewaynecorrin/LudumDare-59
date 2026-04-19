@@ -169,7 +169,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b927f87d61c15e4092454f5b8f3cf27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 189069558655604687, guid: c0c8513063494424cbc7d3524d5d5625, type: 3}
   rewarditem: {fileID: 39913799338609115}
   sfxrewardspawn:
     clip: {fileID: 8300000, guid: e6a4e21fd46d9b74686ac99204085550, type: 3}
@@ -178,10 +177,14 @@ MonoBehaviour:
       min: 1
       max: 1.1
   spawns:
-  - {fileID: 1188730162605088450}
-  - {fileID: 9117386152968331066}
-  - {fileID: 3318812704668800934}
-  - {fileID: 4084960659842316740}
+  - location: {fileID: 1188730162605088450}
+    prefab: {fileID: 189069558655604687, guid: c0c8513063494424cbc7d3524d5d5625, type: 3}
+  - location: {fileID: 9117386152968331066}
+    prefab: {fileID: 189069558655604687, guid: c0c8513063494424cbc7d3524d5d5625, type: 3}
+  - location: {fileID: 3318812704668800934}
+    prefab: {fileID: 189069558655604687, guid: c0c8513063494424cbc7d3524d5d5625, type: 3}
+  - location: {fileID: 4084960659842316740}
+    prefab: {fileID: 189069558655604687, guid: c0c8513063494424cbc7d3524d5d5625, type: 3}
   encounterbounds: {fileID: 6570168075839542821}
   sfxstart:
     clip: {fileID: 8300000, guid: df78e1160c8a6bc40ac81c6b96828cc6, type: 3}

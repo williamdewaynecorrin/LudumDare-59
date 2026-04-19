@@ -3,10 +3,9 @@ using UnityEngine;
 
 public class EnemyEncounter : MonoBehaviour
 {
-    public Enemy prefab;
     public Item rewarditem;
     public AudioClipXT sfxrewardspawn;
-    public Transform[] spawns;
+    public CEnemySpawn[] spawns;
     public GameObject encounterbounds;
     public AudioClipXT sfxstart;
     public AudioClip battlemusic;
@@ -65,9 +64,9 @@ public class EnemyEncounter : MonoBehaviour
         if (hasspawned)
             return;
 
-        foreach (Transform spawn in spawns)
+        foreach (CEnemySpawn spawn in spawns)
         {
-            Enemy enemyinst = GameObject.Instantiate(prefab, spawn.position, Quaternion.identity);
+            Enemy enemyinst = GameObject.Instantiate(spawn.prefab, spawn.location.position, Quaternion.identity);
             enemyinst.SetSpawner(this);
             activeenemies.Add(enemyinst);
         }
@@ -77,4 +76,11 @@ public class EnemyEncounter : MonoBehaviour
         encounterbounds.SetActive(true);
         GameManager.PlayBattleTrack(battlemusic);
     }
+}
+
+[System.Serializable]
+public class CEnemySpawn
+{
+    public Transform location;
+    public Enemy prefab;
 }

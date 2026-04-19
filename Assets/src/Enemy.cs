@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    [Header("Base Data")]
     public Health health;
     public CharacterController character;
     public float damageamount = 25f;
@@ -21,17 +22,39 @@ public class Enemy : MonoBehaviour
     [Range(0f, 1f)]
     public float rotationlerp = 0.2f;
 
+    [Header("Shooting Data")]
+    public bool shoots = false;
+    public ParticleSystem muzzleflash;
+    public Transform muzzle;
+    public CTimer shootingstatetimer;
+    public MinMaxFloat firetimereset;
+    public string fireanim = "Fire";
+    public float bulletspeed = 1.0f;
+    public float bulletgravity = 1.0f;
+    public AudioClipXT sfxfire;
+
+    [Header("SFX/FX")]
     public AudioClipXT sfxspawn;
     public AudioClipXT sfxdeathstart;
     public AudioClipXT sfxdeathend;
 
+    private CTimer firetimer;
     private bool grounded = false;
     private Vector3 currentgravity;
     private PlayerController target;
     private EnemyEncounter spawner;
+    private EEnemyState state = EEnemyState.eChasing;
 
     void Start()
     {
+        firetimer = new CTimer();
+        firetimer.time = firetimereset.PickValue();
+        firetimer.Init();
+        shootingstatetimer.Init();
+
+        if(shoots)
+            muzzleflash.Stop();
+
         StartCoroutine(SpawnRoutine());
     }
 
@@ -78,15 +101,43 @@ public class Enemy : MonoBehaviour
             currentgravity += Vector3.down * gravity;
         }
 
-        // -- hitting player
-        if (Physics.SphereCast(transform.position + sphere.center, sphere.radius, toplayer, out RaycastHit playerhit, speed, playermask, QueryTriggerInteraction.Ignore))
+        if(state == EEnemyState.eChasing)
         {
-            target.health.DealDamage(damageamount);
+            // -- hitting player
+            if (Physics.SphereCast(transform.position + sphere.center, sphere.radius, toplayer, out RaycastHit playerhit, speed, playermask, QueryTriggerInteraction.Ignore))
+            {
+                target.health.DealDamage(damageamount, playerhit.point, playerhit.normal);
+            }
+
+            CollisionFlags moveflags = character.Move(movement);
+
+            if(shoots)
+            {
+                firetimer.Tick(Time.deltaTime);
+                if(firetimer.TimerReached())
+                {
+                    anim.PlayAnimationState(fireanim);
+
+                    firetimer.maxtime = firetimereset.PickValue();
+                    firetimer.Reset();
+                    state = EEnemyState.eShooting;
+                }
+            }
+        }
+        else if(state == EEnemyState.eShooting)
+        {
+            shootingstatetimer.Tick(Time.deltaTime);
+
+            if(shootingstatetimer.TimerReached())
+            {
+                anim.PlayAnimationState(chaseanim);
+
+                shootingstatetimer.Reset();
+                state = EEnemyState.eChasing;
+            }
         }
 
-        CollisionFlags moveflags = character.Move(movement);
         CollisionFlags gravityflags = character.Move(currentgravity);
-
         LookAtTarget(toplayer);
     }
 
@@ -101,6 +152,25 @@ public class Enemy : MonoBehaviour
         anim.PlayAnimationState(spawnanim);
         target = GameManager.Player;
         yield return new WaitForSeconds(2.0f);
+    }
+
+    public void ShootAtTarget()
+    {
+        Bullet bullet = GameManager.EnemyBulletPooler.Handle() as Bullet;
+        bullet.transform.position = muzzle.position;
+        bullet.transform.rotation = muzzle.rotation;
+
+        Vector3 dir = GetPlayerShootDirection();
+        SBulletParams bparams = new SBulletParams(dir, GameManager.kEnemyTeam, bulletspeed, bulletgravity, damageamount);
+        bullet.CreateBullet(bparams);
+
+        muzzleflash.Play(true);
+        GameManager.Play3D(sfxfire, transform.position);
+    }
+
+    private Vector3 GetPlayerShootDirection()
+    {
+        return (GameManager.Player.GetChestTarget() - muzzle.position).normalized;
     }
 
     public void OnDeath()
@@ -169,4 +239,10 @@ public class Enemy : MonoBehaviour
         transform.position = location;
         character.enabled = true;
     }
+}
+
+public enum EEnemyState
+{
+    eChasing = 0,
+    eShooting = 1
 }

@@ -19,6 +19,7 @@ public class Bullet : PooledObject
     private Vector3 trailoffsetp;
     private Quaternion trailoffsetr;
     private Vector3 trailscale;
+    private bool alreadycollided = false;
 
     public float AdjustedSpeed
     {
@@ -61,6 +62,7 @@ public class Bullet : PooledObject
 
     public void CreateBullet(SBulletParams data)
     {
+        alreadycollided = false;
         trail.transform.SetParent(this.transform);
         trail.transform.localPosition = trailoffsetp;
         trail.transform.localRotation = trailoffsetr;
@@ -125,15 +127,26 @@ public class Bullet : PooledObject
 
     private void OnCollisionInternal(Vector3 hitpoint, Vector3 hitnormal, GameObject hit)
     {
+        if (alreadycollided)
+            return;
+
         if(hit.TryGetComponent<BulletHitReaction>(out BulletHitReaction bhit))
         {
             bhit.OnHit(data, hitpoint, hitnormal);
+        }
+        else if(hit.TryGetComponent<PlayerController>(out PlayerController player))
+        {
+            if(data.teamid != GameManager.kPlayerTeam)
+            {
+                player.health.OnHit(data, hitpoint, hitnormal);
+            }
         }
         else
         {
             GameManager.Play3D(sfxhit, hitpoint);
         }
 
+        alreadycollided = true;
         trail.transform.SetParent(null);
         trail.TurnOn(data.bulletdir * AdjustedSpeed);
         RecycleSelf();
