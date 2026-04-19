@@ -26,4 +26,9 @@ public class CTimer
     {
         time = maxtime;
     }
+
+    public float GetLerpValue()
+    {
+        return Mathf.Clamp01(1.0f - (time / maxtime));
+    }
 }

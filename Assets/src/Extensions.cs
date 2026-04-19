@@ -9,10 +9,16 @@ public static class Extensions
         return new Vector3(v.x, 0f, v.z);
     }
 
-    public static void PlayAnimationState(this Animator anim, string statename, string animlayer = kBaseAnimLayer)
+    public static void PlayAnimationState(this Animator anim, string statename, string animlayer = kBaseAnimLayer, bool resetifsame = false)
     {
         int layer = anim.GetLayerIndex(animlayer);
-        anim.Play(statename, layer);
+
+        if(resetifsame && anim.AnimatorIsInState(statename, animlayer))
+        {
+            anim.Play(statename, layer, 0.0f);
+        }
+        else
+            anim.Play(statename, layer);
     }
 
     public static void PlayAnimationStateTransitioned(this Animator anim, string statename, float transitiontime, string animlayer = kBaseAnimLayer)
@@ -27,5 +33,10 @@ public static class Extensions
         AnimatorStateInfo info = anim.GetCurrentAnimatorStateInfo(layer);
 
         return info.IsName(statename);
+    }
+
+    public static Color SetAlpha(this Color c, float a)
+    {
+        return new Color(c.r, c.g, c.b, a);
     }
 }

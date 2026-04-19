@@ -6,10 +6,13 @@ public class PlayerController : MonoBehaviour
     // -- inspectable members
     [Header("Base Data")]
     public new PlayerCamera camera;
+    public WeaponHandler handler;
     public float acceleration = 0.1f;
     public float maxspeed = 0.5f;
     [Range(0f, 1f)]
     public float stopfriction = 0.9f;
+    public Health health;
+    public UIItems uiitems;
 
     [Header("Gravity/Jumping")]
     public float gravitystrength = 0.1f;
@@ -23,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [Range(0f, 1f)]
     public float rotationlerp = 0.2f;
     public Animator animatorbody;
+    public DynamicAnimation dynamicanim;
     public string bodyidle = "Idle";
     public string bodywalk = "Walk";
 
@@ -33,6 +37,8 @@ public class PlayerController : MonoBehaviour
     [Header("SFX")]
     public AudioClipXT sfxjump;
     public AudioClipXT sfxland;
+    public AudioClipXT sfxstep;
+    public float traveldistanceforstep = 4.0f;
 
     // -- private members
     private CharacterController character = null;
@@ -43,6 +49,7 @@ public class PlayerController : MonoBehaviour
     private GameObject lastgroundobject = null;
     private bool coyotetimeavailable = false;
     private bool jumped = false;
+    private float distancetravelled;
 
     public bool CanJump => !jumped && (grounded || coyotetimeavailable);
 
@@ -68,12 +75,18 @@ public class PlayerController : MonoBehaviour
         if (movementinput != Vector2.zero)
         {
             if (!animatorbody.AnimatorIsInState(bodywalk))
+            {
+                dynamicanim.SetState(EDynamicAnimState.eWalk);
                 animatorbody.PlayAnimationState(bodywalk);
+            }
         }
         else
         {
             if (!animatorbody.AnimatorIsInState(bodyidle))
+            {
+                dynamicanim.SetState(EDynamicAnimState.eIdle);
                 animatorbody.PlayAnimationState(bodyidle);
+            }
         }
 
         // -- jumping
@@ -103,29 +116,6 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // -- gravity + grounding
-        bool wasgrounded = grounded;
-        grounded = false;
-        GetGroundedData(out Vector3 p1, out Vector3 p2, out Vector3 gravitydir, out float castdistance);
-
-        if (currentgravity.y <= 0f && Physics.CapsuleCast(p1, p2, character.radius, gravitydir, out RaycastHit groundhit, castdistance, groundmask, QueryTriggerInteraction.Ignore))
-        {
-            if (!wasgrounded)
-                OnGroundLand(groundhit);
-
-            grounded = true;
-            lastgroundobject = groundhit.collider.gameObject;
-            currentgravity = Vector3.zero;
-        }
-        else
-        {
-            if (wasgrounded)
-                OnGroundLeave();
-
-            currentgravity += gravitydir * gravitystrength;
-        }
-
-
         // -- movement
         Vector3 forward = camera.ForwardMovement();
         Vector3 strafe = camera.StrafeMovement();
@@ -141,20 +131,55 @@ public class PlayerController : MonoBehaviour
             currentmovement *= stopfriction;
         }
 
-        CollisionFlags gravityflags = character.Move(currentgravity);
+        // -- gravity + grounding
+        bool wasgrounded = grounded;
+        grounded = false;
+        GetGroundedData(out Vector3 p1, out Vector3 p2, out Vector3 gravitydir, out float castdistance);
+
+        if (currentgravity.y <= 0f && Physics.CapsuleCast(p1, p2, character.radius, gravitydir, out RaycastHit groundhit, castdistance, groundmask, QueryTriggerInteraction.Ignore))
+        {
+            if (!wasgrounded)
+                OnGroundLand(groundhit);
+
+            character.Move(Vector3.down * groundhit.distance);
+            grounded = true;
+            lastgroundobject = groundhit.collider.gameObject;
+            currentgravity = Vector3.zero;
+        }
+        else
+        {
+            if (wasgrounded)
+                OnGroundLeave();
+
+            currentgravity += gravitydir * gravitystrength;
+        }
+
+        Vector2 xzpos = new Vector2(transform.position.x, transform.position.z);
         CollisionFlags moveflags = character.Move(currentmovement);
+        CollisionFlags gravityflags = character.Move(currentgravity);
+
+        // -- footstep detection
+        if (grounded)
+        {
+            Vector2 newxzpos = new Vector2(transform.position.x, transform.position.z);
+            float change = (newxzpos - xzpos).magnitude;
+            distancetravelled += change;
+
+            if (distancetravelled >= traveldistanceforstep)
+            {
+                distancetravelled -= traveldistanceforstep;
+                GameManager.Play2D(sfxstep);
+            }
+        }
 
         // -- rotate model towards last look dir
         graphicsroot.localRotation = Quaternion.Slerp(graphicsroot.localRotation, Quaternion.LookRotation(forward, Vector3.up), rotationlerp);
 
-        //282829
-        //882D22
-        //FFFEE4
     }
 
     private void OnGroundLand(RaycastHit hit)
     {
-        Teleport(hit.point + Vector3.up * Physics.defaultContactOffset);
+        //Teleport(hit.point + hit.normal * mingroundedcastdist * 0.5f);
         jumped = false;
         GameManager.Play3D(sfxland, transform.position);
     }
@@ -204,9 +229,25 @@ public class PlayerController : MonoBehaviour
         return gravitydir;
     }
 
+    public void ItemPickedUp(Item item)
+    {
+        uiitems.ObtainItem(item);
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.TryGetComponent<EnemyEncounter>(out EnemyEncounter encounter))
+        {
+            encounter.SpawnEnemies();
+        }
+    }
+
     // -- debug functions
     void OnGUI()
     {
+        if (!Application.isEditor)
+            return;
+
         const float debuglineheight = 25f;
         Rect debugrect = new Rect(5, 5, 250, debuglineheight);
 

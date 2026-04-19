@@ -3,19 +3,29 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[DefaultExecutionOrder(ExecutionOrders.GAME_MANAGER)]
 public class GameManager : MonoBehaviour
 {
     // -- singleton
+    public const uint kPlayerTeam = 0;
+    public const uint kEnemyTeam = 1;
+
     private static GameManager instance = null;
     private static float gSFXVolume = 1.0f;
     private const float kDefault3DMaxVolumeDistance = 10.0f;
     private const float kDefault3DMinVolumeDistance = 100.0f;
 
     private static float gMusicVolume = 1.0f;
+    private static PlayerController player = null;
+    private static bool battlemusicactive = false;
+
+    public static PlayerController Player => player;
 
     // -- inspectable
+    public float musictransitionspeed = 2.0f;
     public AudioClip levelmusic;
     public AudioSource musicsource;
+    public AudioSource battlemusicsource;
     public AudioSource sfxsource;
 
     void Awake()
@@ -38,6 +48,11 @@ public class GameManager : MonoBehaviour
         GameObject.Destroy(this.gameObject);
     }
 
+    void Start()
+    {
+        player = GameObject.FindFirstObjectByType<PlayerController>();   
+    }
+
     private void OnFirstInitialize()
     {
         musicsource.loop = true;
@@ -54,12 +69,44 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        if(battlemusicactive)
+        {
+            battlemusicsource.volume += musictransitionspeed * Time.deltaTime;
+            musicsource.volume -= musictransitionspeed * Time.deltaTime;
 
+            if (musicsource.volume == 0.0f)
+                musicsource.Pause();
+        }
+        else
+        {
+            if (musicsource.volume == 0.0f)
+                musicsource.Play();
+
+            battlemusicsource.volume -= musictransitionspeed * Time.deltaTime;
+            musicsource.volume += musictransitionspeed * Time.deltaTime;
+        }
+
+        battlemusicsource.volume = Mathf.Clamp(battlemusicsource.volume, 0, gMusicVolume);
+        musicsource.volume = Mathf.Clamp(musicsource.volume, 0, gMusicVolume);
     }
 
     public static void LoadLevel(string level)
     {
         SceneManager.LoadScene(level);
+    }
+
+    public static void PlayBattleTrack(AudioClip track)
+    {
+        battlemusicactive = true;
+        instance.battlemusicsource.clip = track;
+        instance.battlemusicsource.Stop(); 
+        instance.battlemusicsource.time = 0.0f;
+        instance.battlemusicsource.Play();
+    }
+
+    public static void ResumeNormalTrack()
+    {
+        battlemusicactive = false;
     }
 
     public static AudioSource Play2D(AudioClipXT clip)
@@ -74,6 +121,7 @@ public class GameManager : MonoBehaviour
     {
         AudioSource source = instance.CreateInternal(clip);
         source.transform.position = pos;
+        source.spatialBlend = 1.0f;
         source.minDistance = kDefault3DMaxVolumeDistance;
         source.maxDistance = kDefault3DMinVolumeDistance;
         source.Play();
