@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     public WeaponHandler handler;
     public float acceleration = 0.1f;
     public float maxspeed = 0.5f;
+    public float maxsprintspeed = 0.5f;
     [Range(0f, 1f)]
     public float stopfriction = 0.9f;
     public Health health;
@@ -50,8 +51,11 @@ public class PlayerController : MonoBehaviour
     private bool coyotetimeavailable = false;
     private bool jumped = false;
     private float distancetravelled;
+    private bool issprinting = false;
 
     public bool CanJump => !jumped && (grounded || coyotetimeavailable);
+    public bool CanSprint => grounded;
+    public bool IsSprinting => issprinting;
 
     void Awake()
     {
@@ -71,13 +75,23 @@ public class PlayerController : MonoBehaviour
         yin += Input.GetKey(KeyCode.S) ? -1.0f : 0.0f;
 
         movementinput = new Vector2(xin, yin);
+        bool sprintinput = Input.GetKey(KeyCode.LeftShift);
+
+        if (!sprintinput)
+            issprinting = false;
 
         if (movementinput != Vector2.zero)
         {
             if (!animatorbody.AnimatorIsInState(bodywalk))
+                animatorbody.PlayAnimationState(bodywalk);
+
+            if ((sprintinput && CanSprint) || issprinting)
+            {
+                dynamicanim.SetState(EDynamicAnimState.eSprint);
+            }
+            else
             {
                 dynamicanim.SetState(EDynamicAnimState.eWalk);
-                animatorbody.PlayAnimationState(bodywalk);
             }
         }
         else
@@ -95,11 +109,16 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-        // -- coyote time
+        // -- coyote time / grounded
         if (grounded)
         {
             coyotetimer.Reset();
             coyotetimeavailable = true;
+
+            if (!issprinting && sprintinput && CanSprint)
+            {
+                issprinting = true;
+            }
         }
         else
         {
@@ -124,7 +143,9 @@ public class PlayerController : MonoBehaviour
         {
             Vector3 framemovement = forward * acceleration * movementinput.y + strafe * acceleration * movementinput.x;
             currentmovement += framemovement;
-            currentmovement = Vector3.ClampMagnitude(currentmovement, maxspeed);
+
+            float clamp = issprinting ? maxsprintspeed : maxspeed;
+            currentmovement = Vector3.ClampMagnitude(currentmovement, clamp);
         }
         else
         {
@@ -232,6 +253,11 @@ public class PlayerController : MonoBehaviour
     public void ItemPickedUp(Item item)
     {
         uiitems.ObtainItem(item);
+    }
+
+    public void ItemPickedUp(EItemType itemtype)
+    {
+        uiitems.ObtainItem(itemtype);
     }
 
     void OnTriggerEnter(Collider other)

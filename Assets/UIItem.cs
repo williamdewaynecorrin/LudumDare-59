@@ -4,6 +4,8 @@ using UnityEngine;
 public class UIItem : MonoBehaviour
 {
     public EItemType type = EItemType.eCrystals;
+    public string itemname = "NAME";
+    public Color itemcolor = Color.blue;
     public TMP_Text counttext;
 
     private int count = 0;

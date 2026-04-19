@@ -7,4 +7,9 @@ public class AudioClipXT
     [Range(0f, 1f)]
     public float volumemult = 1.0f;
     public MinMaxFloat pitchvariance;
+
+    public bool IsValid()
+    {
+        return clip != null;
+    }
 }

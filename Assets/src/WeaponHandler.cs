@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class WeaponHandler : MonoBehaviour
 {
     [Header("Base")]
+    public PlayerController player;
     public Transform rootbase;
     public Transform hipfirebase;
     public Transform adsbase;
@@ -12,6 +13,8 @@ public class WeaponHandler : MonoBehaviour
     public float adsspeed = 0.2f;
     [Range(0f, 1f)]
     public float lowerspeed = 0.3f;
+    public AudioClipXT sfxadson;
+    public AudioClipXT sfxadsoff;
 
     [Header("Animation")]
     public Animator fpsarmsanim;
@@ -47,6 +50,8 @@ public class WeaponHandler : MonoBehaviour
     private int currentclip;
     private bool isads = false;
 
+    public bool CanZoom => !player.IsSprinting;
+
     void Awake()
     {
         currentclip = clipsize;
@@ -75,17 +80,23 @@ public class WeaponHandler : MonoBehaviour
                 TryReload();
             }
 
-            if (Input.GetMouseButton(1))
+            if (Input.GetMouseButton(1) && CanZoom)
             {
                 if (!isads)
+                {
+                    GameManager.Play2D(sfxadson);
                     uireticle.Hide();
+                }
 
                 isads = true;
             }
             else
             {
                 if (isads)
+                {
+                    GameManager.Play2D(sfxadsoff);
                     uireticle.Show();
+                }
 
                 isads = false;
             }
@@ -111,11 +122,14 @@ public class WeaponHandler : MonoBehaviour
 
     private bool CanFire()
     {
-        return currentclip > 0;
+        return currentclip > 0 && !player.IsSprinting;
     }
 
     private void TryReload()
     {
+        if (currentclip == clipsize)
+            return;
+
         if (!fpsarmsanim.AnimatorIsInState(reloadanim))
         {
             isreloading = true;

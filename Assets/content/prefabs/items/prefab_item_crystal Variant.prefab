@@ -150,6 +150,22 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.52268
       objectReference: {fileID: 0}
+    - target: {fileID: 8972626042178302211, guid: 989bb69439d55af4b888919f67d70ba6, type: 3}
+      propertyPath: sfxpickup.clip
+      value: 
+      objectReference: {fileID: 8300000, guid: 283790b507607a945ab52ec3f1c90c38, type: 3}
+    - target: {fileID: 8972626042178302211, guid: 989bb69439d55af4b888919f67d70ba6, type: 3}
+      propertyPath: sfxpickup.volumemult
+      value: 0.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 8972626042178302211, guid: 989bb69439d55af4b888919f67d70ba6, type: 3}
+      propertyPath: sfxpickup.pitchvariance.max
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8972626042178302211, guid: 989bb69439d55af4b888919f67d70ba6, type: 3}
+      propertyPath: sfxpickup.pitchvariance.min
+      value: 1.3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

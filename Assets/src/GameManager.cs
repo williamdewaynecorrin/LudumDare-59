@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     private static bool battlemusicactive = false;
 
     public static PlayerController Player => player;
+    public static ObjectPooler TextPooler => instance.textpooler;
 
     // -- inspectable
     public float musictransitionspeed = 2.0f;
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     public AudioSource musicsource;
     public AudioSource battlemusicsource;
     public AudioSource sfxsource;
+    public ObjectPooler textpooler;
 
     void Awake()
     {

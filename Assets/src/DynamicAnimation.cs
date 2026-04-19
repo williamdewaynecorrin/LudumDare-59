@@ -19,21 +19,27 @@ public class DynamicAnimation : MonoBehaviour
     [Header("Sprint")]
     public float sprintamp = 0.65f;
     public float sprintperiod = 4.0f;
+    public Vector3 sprintoffset;
+    public Vector3 sprintrot;
 
     private Vector3 defaultpos;
     private Vector3 targetoffset;
+    private Quaternion defaultrot;
+    private Quaternion targetoffsetrot;
     private float animtime = 0.0f;
     private EDynamicAnimState state = EDynamicAnimState.eIdle;
 
     void Awake()
     {
         defaultpos = basetransform.localPosition;
+        defaultrot = basetransform.localRotation;
     }
 
     void Update()
     {
         animtime += Time.deltaTime;
         Vector3 offsetpos = Vector3.zero;
+        Quaternion offsetrot = Quaternion.identity;
         switch(state )
         {
             case EDynamicAnimState.eIdle:
@@ -46,15 +52,20 @@ public class DynamicAnimation : MonoBehaviour
             case EDynamicAnimState.eSprint:
                 offsetpos.x = Mathf.Cos(animtime * sprintperiod * 2.0f) * sprintamp;
                 offsetpos.y = Mathf.Sin(animtime * sprintperiod) * sprintamp;
+
+                offsetpos += sprintoffset;
+                offsetrot = Quaternion.Euler(sprintrot);
                 break;
         }
 
         targetoffset = offsetpos;
+        targetoffsetrot = offsetrot;
     }
 
     void FixedUpdate()
     {
         basetransform.localPosition = Vector3.Lerp(basetransform.localPosition, targetoffset, lerppos);
+        basetransform.localRotation = Quaternion.Slerp(basetransform.localRotation, targetoffsetrot, lerppos);
     }
 
     public void SetState(EDynamicAnimState state)

@@ -105,8 +105,21 @@ public class Enemy : MonoBehaviour
 
     public void OnDeath()
     {
+        sphere.enabled = false;
+        character.enabled = false;
         anim.PlayAnimationState(deathanim);
         GameManager.Play3D(sfxdeathstart, transform.position);
+
+        UIDynamicText texth = GameManager.TextPooler.Handle() as UIDynamicText;
+
+        string textliteral = "KILL!";
+        int select = Random.Range(0, 3);
+        if (select == 1)
+            textliteral = "WHAM!";
+        else if(select == 2)
+            textliteral = "SMASH!";
+
+        texth.CreateText(textliteral, Color.red, new Vector3(Random.Range(-180f, -130f), Random.Range(50f, 75f), 0f), Random.Range(-10f, 10f), Vector3.one);
 
         if (spawner != null)
             spawner.EnemyDeath(this);
