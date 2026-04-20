@@ -1,6 +1,7 @@
 using System.Dynamic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(ExecutionOrders.GAME_MANAGER)]
@@ -9,6 +10,8 @@ public class GameManager : MonoBehaviour
     // -- singleton
     public const uint kPlayerTeam = 0;
     public const uint kEnemyTeam = 1;
+    public const string kMenuLevel = "level_menu";
+    public const string kGameLevel = "level_game";
 
     private static GameManager instance = null;
     private static float gSFXVolume = 1.0f;
@@ -24,6 +27,7 @@ public class GameManager : MonoBehaviour
     public static ObjectPooler EnemyBulletPooler => instance.enemybulletpooler;
 
     // -- inspectable
+    [Header("Base Data")]
     public float musictransitionspeed = 2.0f;
     public AudioClip levelmusic;
     public AudioSource musicsource;
@@ -31,27 +35,39 @@ public class GameManager : MonoBehaviour
     public AudioSource sfxsource;
     public ObjectPooler textpooler; 
     public ObjectPooler enemybulletpooler;
+    public CutsceneCamera cutscenecam;
+
+    [Header("Post Process")]
+    public PostProcessProfile postprocess;
+    [Range(0f, 1f)]
+    public float vignetteonvalue;
+    [Range(0f, 1f)]
+    public float vignetteoffvalue;
+    [Range(0f, 1f)]
+    public float vignettelerp = 0.1f;
+    public float targetgrain;
+
+    private Vignette vignette;
+    private Grain grain;
+    private ChromaticAberration chromatic;
+    private bool vignetteon = false;
 
     private static bool wongame = false;
 
     void Awake()
     {
-        if(instance == null)
-        {
-            OnFirstInitialize();
-            instance = this;
-            GameObject.DontDestroyOnLoad(this.gameObject);
-            return;
-        }
+        instance = this;
+        OnFirstInitialize();
+        return;
 
-        // -- use new level's music
-        instance.musicsource.Stop();
-        instance.musicsource.clip = levelmusic;
-        instance.musicsource.time = 0.0f;
-        instance.musicsource.Play();
+        //// -- use new level's music
+        //instance.musicsource.Stop();
+        //instance.musicsource.clip = levelmusic;
+        //instance.musicsource.time = 0.0f;
+        //instance.musicsource.Play();
 
-        // -- destroy new instance
-        GameObject.Destroy(this.gameObject);
+        //// -- destroy new instance
+        //GameObject.Destroy(this.gameObject);
     }
 
     void Start()
@@ -66,11 +82,31 @@ public class GameManager : MonoBehaviour
         musicsource.Play();
 
         sfxsource.loop = false;
+
+        postprocess.TryGetSettings<Vignette>(out vignette);
+        vignette.opacity.value = vignetteonvalue;
+
+        postprocess.TryGetSettings<Grain>(out grain);
+        grain.intensity.value = 0f;
+
+        postprocess.TryGetSettings<ChromaticAberration>(out chromatic);
+        chromatic.intensity.value = 0.0f;
     }
 
     void FixedUpdate()
     {
+        if(vignetteon)
+        {
+            vignette.opacity.value = Mathf.Lerp(vignette.opacity.value, vignetteonvalue, vignettelerp);
+        }
+        else
+        {
+            vignette.opacity.value = Mathf.Lerp(vignette.opacity.value, vignetteoffvalue, vignettelerp);
+        }
 
+        float playerhealthratio = Mathf.Clamp01(1.0f - (player.health.health / player.health.MaxHealth)) * 0.8f;
+        chromatic.intensity.value = Mathf.Lerp(chromatic.intensity.value, playerhealthratio, vignettelerp * 2.0f);
+        grain.intensity.value = Mathf.Lerp(grain.intensity.value, targetgrain, vignettelerp);
     }
 
     void Update()
@@ -118,14 +154,28 @@ public class GameManager : MonoBehaviour
     public static void WinGame()
     {
         wongame = true;
+        player.SetFrozen(true);
+        player.camera.DisableAll();
+        instance.cutscenecam.PlayWin();
     }
 
     public static void LoseGame()
     {
         if(!wongame)
         {
-
+            player.camera.Camera.enabled = false;
+            instance.cutscenecam.PlayLoss();
         }
+    }
+
+    public static void VignetteOpen()
+    {
+        instance.vignetteon = false;
+    }
+
+    public static void VignetteClose()
+    {
+        instance.vignetteon = true;
     }
 
     public static AudioSource Play2D(AudioClipXT clip)

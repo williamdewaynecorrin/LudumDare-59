@@ -14,7 +14,7 @@ public class UIItem : MonoBehaviour
 
     private int count = 0;
 
-    public bool ItemComplete => hascount ? count == totalcount : item.activeInHierarchy;
+    public bool ItemComplete => hascount ? count >= totalcount : item.activeInHierarchy;
 
     void Awake()
     {

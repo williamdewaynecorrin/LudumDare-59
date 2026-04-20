@@ -7,11 +7,14 @@ public class PlayerCamera : MonoBehaviour
     public PlayerController player;
     public Vector3 initialoffset = new Vector3(0f, 1.0f, 0.5f);
     public float sensitivity = 1.0f;
+    public Camera[] cameras;
 
     private Vector3 targetpos = Vector3.zero;
     private Quaternion targetrot = Quaternion.identity;
     private float currentpitch = 0.0f;
     private float currentyaw = 0.0f;
+
+    public Camera Camera => cameras[0];
 
     void Awake()
     {
@@ -34,6 +37,26 @@ public class PlayerCamera : MonoBehaviour
     void LateUpdate()
     {
         UpdateTarget();
+    }
+
+    public void DisableAll()
+    {
+        foreach (Camera cam in cameras)
+        {
+            cam.enabled = false;
+            if(cam.TryGetComponent<AudioListener>(out AudioListener listen))
+            {
+                listen.enabled = false;
+            }
+        }
+    }
+
+    public void SetFOV(float fov)
+    {
+        foreach(Camera cam in cameras)
+        {
+            cam.fieldOfView = fov;
+        }
     }
 
     private void CalculateTarget()

@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public float stopfriction = 0.9f;
     public Health health;
     public AudioClipXT sfxhurt;
+    public AudioClipXT sfxdeath;
     public UIItems uiitems;
 
     [Header("Gravity/Jumping")]
@@ -56,6 +57,7 @@ public class PlayerController : MonoBehaviour
     private float distancetravelled;
     private bool issprinting = false;
     private Vector3 currentknockback = Vector3.zero;
+    private bool frozen = false;
 
     public bool CanJump => !jumped && (grounded || coyotetimeavailable);
     public bool CanSprint => grounded;
@@ -72,6 +74,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (frozen)
+            return;
+
         // -- movement
         float xin = Input.GetKey(KeyCode.A) ? -1.0f : 0.0f;
         xin += Input.GetKey(KeyCode.D) ? 1.0f : 0.0f;
@@ -139,6 +144,9 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (frozen)
+            return;
+
         // -- movement
         Vector3 forward = camera.ForwardMovement();
         Vector3 strafe = camera.StrafeMovement();
@@ -205,7 +213,21 @@ public class PlayerController : MonoBehaviour
 
         // -- rotate model towards last look dir
         graphicsroot.localRotation = Quaternion.Slerp(graphicsroot.localRotation, Quaternion.LookRotation(forward, Vector3.up), rotationlerp);
+    }
 
+    public void Die()
+    {
+        GameManager.Play2D(sfxdeath);
+        GameManager.LoseGame();
+        SetFrozen(true);
+
+        dynamicanim.SetState(EDynamicAnimState.eIdle);
+        animatorbody.PlayAnimationState(bodyidle);
+    }
+
+    public void SetFrozen(bool freeze)
+    {
+        frozen = freeze;
     }
 
     private void OnGroundLand(RaycastHit hit)

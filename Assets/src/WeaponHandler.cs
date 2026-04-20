@@ -13,6 +13,8 @@ public class WeaponHandler : MonoBehaviour
     public float adsspeed = 0.2f;
     [Range(0f, 1f)]
     public float lowerspeed = 0.3f;
+    public float hipfirefov;
+    public float adsfov;
     public AudioClipXT sfxadson;
     public AudioClipXT sfxadsoff;
 
@@ -58,6 +60,12 @@ public class WeaponHandler : MonoBehaviour
         firetime.Init();
         firetime.time = 0.0f;
         muzzleflash.Stop();
+
+    }
+
+    void Start()
+    {
+        player.camera.SetFOV(hipfirefov);
     }
 
     void Update()
@@ -113,10 +121,12 @@ public class WeaponHandler : MonoBehaviour
         if (isads)
         {
             rootbase.transform.localPosition = Vector3.Lerp(rootbase.transform.localPosition, adsbase.localPosition, adsspeed);
+            player.camera.SetFOV(Mathf.Lerp(player.camera.Camera.fieldOfView, adsfov, adsspeed));
         }
         else
         {
             rootbase.transform.localPosition = Vector3.Lerp(rootbase.transform.localPosition, hipfirebase.localPosition, lowerspeed);
+            player.camera.SetFOV(Mathf.Lerp(player.camera.Camera.fieldOfView, hipfirefov, adsspeed));
         }
     }
 
