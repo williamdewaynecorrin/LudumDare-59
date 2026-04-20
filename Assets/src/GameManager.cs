@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     public static PlayerController Player => player;
     public static ObjectPooler TextPooler => instance.textpooler;
     public static ObjectPooler EnemyBulletPooler => instance.enemybulletpooler;
+    public static bool gWonGame = false;
 
     // -- inspectable
     [Header("Base Data")]
@@ -51,8 +52,6 @@ public class GameManager : MonoBehaviour
     private Grain grain;
     private ChromaticAberration chromatic;
     private bool vignetteon = false;
-
-    private static bool wongame = false;
 
     void Awake()
     {
@@ -153,7 +152,7 @@ public class GameManager : MonoBehaviour
 
     public static void WinGame()
     {
-        wongame = true;
+        gWonGame = true;
         player.SetFrozen(true);
         player.camera.DisableAll();
         instance.cutscenecam.PlayWin();
@@ -161,7 +160,7 @@ public class GameManager : MonoBehaviour
 
     public static void LoseGame()
     {
-        if(!wongame)
+        if(!gWonGame)
         {
             player.camera.Camera.enabled = false;
             instance.cutscenecam.PlayLoss();

@@ -317,6 +317,7 @@ public class PlayerController : MonoBehaviour
     // -- debug functions
     void OnGUI()
     {
+        return;
         if (!Application.isEditor)
             return;
 

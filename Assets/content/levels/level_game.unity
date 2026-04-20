@@ -2204,7 +2204,7 @@ MonoBehaviour:
   anim: {fileID: 1144361683}
   wintarget: {fileID: 282987044}
   losetarget: {fileID: 189208911}
-  targetfov: 75
+  targetfov: 77.5
   cutscenelerp: 0.05
 --- !u!114 &216501049
 MonoBehaviour:
@@ -9125,9 +9125,9 @@ RectTransform:
   - {fileID: 1618462128}
   m_Father: {fileID: 1009423263}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -756.00006, y: -312}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 43.99994, y: 138}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1365799745
@@ -18731,8 +18731,8 @@ MonoBehaviour:
   adsbase: {fileID: 1169009038}
   adsspeed: 0.3
   lowerspeed: 0.45
-  hipfirefov: 60
-  adsfov: 48
+  hipfirefov: 65
+  adsfov: 55
   sfxadson:
     clip: {fileID: 8300000, guid: 3205047736ea50848a44cc77a1c92aa9, type: 3}
     volumemult: 0.6

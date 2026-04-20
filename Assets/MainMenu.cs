@@ -27,6 +27,7 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.None;
+        GameManager.gWonGame = false;
         postprocess.TryGetSettings<Vignette>(out vignette);
         vignette.opacity.value = vignetteonvalue;
 
